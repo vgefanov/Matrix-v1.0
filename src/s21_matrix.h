@@ -6,21 +6,18 @@
 #ifndef SRC_S21_MATRIX_H_
 #define SRC_S21_MATRIX_H_
 
+#define OK 0
+#define INCORRECT_MATRIX 1
+#define CALCULATION_ERROR 2
+
 #define SUCCESS 1
 #define FAILURE 0
 #define EPS 1e-7
-
-typedef enum {
-    TRUE_MATRIX = 0,
-    INCORRECT_MATRIX = 1,
-    CALCULATION_ERROR = 2
-} matrix_type_t;
 
 typedef struct matrix_struct {
     double **matrix;
     int rows;
     int columns;
-    matrix_type_t matrix_type;
 } matrix_t;
 
 // создание матриц
