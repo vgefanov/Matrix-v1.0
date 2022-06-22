@@ -150,7 +150,11 @@ int s21_calc_complements(matrix_t *A, matrix_t *result) {
                 for (int i = 0; i < result->rows; i++) {
                     for (int j = 0; j < result->columns; j++) {
                         matrix_t minor = reduced_matrix(A, i, j);
-                        result->matrix[i][j] = matrix_minor(&minor) * pow(-1, i + j);
+                        if ((i + j) % 2 == 0) {
+                            result->matrix[i][j] = matrix_minor(&minor);
+                        } else {
+                            result->matrix[i][j] = -1 * matrix_minor(&minor);
+                        }
                         s21_remove_matrix(&minor);
                     }
                 }
