@@ -1,5 +1,4 @@
 #include <math.h>
-// #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -12,7 +11,7 @@
 
 #define SUCCESS 1
 #define FAILURE 0
-#define EPS 1e-7
+#define EPS 1e-07
 
 typedef struct matrix_struct {
     double **matrix;
@@ -46,6 +45,8 @@ int s21_transpose(matrix_t *A, matrix_t *result);
 
 // минор матрицы и матрица алгебраических дополнений
 int s21_calc_complements(matrix_t *A, matrix_t *result);
+matrix_t reduced_matrix(matrix_t *A, int rows, int columns);
+double matrix_minor(matrix_t *A);
 
 // определитель матрицы
 int s21_determinant(matrix_t *A, double *result);

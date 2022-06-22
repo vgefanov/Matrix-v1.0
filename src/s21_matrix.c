@@ -138,89 +138,107 @@ int s21_transpose(matrix_t *A, matrix_t *result) {
     return trans;
 }
 
-// // минор матрицы и матрица алгебраических дополнений
-// int s21_calc_complements(matrix_t *A, matrix_t *result) {
-// int compl = OK;
-// if (A->rows > 0 && A->columns > 0) {
-//     if (A->rows == A->columns) {
-//         s21_create_matrix(A->rows - 1, A->columns - 1, result);
-//         for (int i = 0; i < result->rows; i++) {
-//             for (int j = 0; j < result->columns; j++) {
-//                 matrix_t minor = minor(A, i, j);
-//                 result->matrix[i][j] = 
-//     }
-// }
-// }
+// минор матрицы и матрица алгебраических дополнений
+int s21_calc_complements(matrix_t *A, matrix_t *result) {
+    int complements = OK;
+    if (A->rows > 0 && A->columns > 0) {
+        if (A->rows == A->columns) {
+            s21_create_matrix(A->rows, A->columns, result);
+            if (A->rows == 1) {
+                result->matrix[0][0] = 1;
+            } else {
+                for (int i = 0; i < result->rows; i++) {
+                    for (int j = 0; j < result->columns; j++) {
+                        matrix_t minor = reduced_matrix(A, i, j);
+                        result->matrix[i][j] = matrix_minor(&minor) * pow(-1, i + j);
+                        s21_remove_matrix(&minor);
+                    }
+                }
+            }
+        } else {
+            complements = CALCULATION_ERROR;
+        }
+    } else {
+        complements = INCORRECT_MATRIX;
+    }
+    return complements;
+}
 
-// matrix_t minor(matrix_t *A, int rows, int columns) {
-//     matrix_t result;
-//     int k_rows = 0;
-//     int k_columns = 0;
-//     s21_create_matrix(A->rows - 1, A->columns - 1, &result);
-//     for (int i = 0; i < A->rows; i++) {
-//         if (i != rows) {
-//             for (int j = 0; j < A->columns; j++) {
-//                 if (j != columns) {
-//                     result.matrix[k_rows][k_columns] = A->matrix[i][j];
-//                     k_columns++;
-//                 }
-//             }
-//             k_rows++;
-//         }
-//     }
-//     return result;
-// }
+matrix_t reduced_matrix(matrix_t *A, int rows, int columns) {
+    matrix_t result = {};
+    s21_create_matrix(A->rows - 1, A->columns - 1, &result);
+    int k_rows = 0;
+    for (int i = 0; i < A->rows; i++) {
+        if (i != rows) {
+            int k_columns = 0;
+            for (int j = 0; j < A->columns; j++) {
+                if (j != columns) {
+                    result.matrix[k_rows][k_columns] = A->matrix[i][j];
+                    k_columns++;
+                }
+            }
+            k_rows++;
+        }
+    }
+    return result;
+}
 
-// double matr
+double matrix_minor(matrix_t *A) {
+    double element = 0.0;
+    if (A->rows == 1) {
+        element = A->matrix[0][0];
+    } else if (A->rows == 2) {
+        element = A->matrix[0][0] * A->matrix[1][1] - A->matrix[0][1] * A->matrix[1][0];
+    } else {
+        int sign = 1;
+        for (int i = 0; i < A->columns; i++) {
+            matrix_t B = reduced_matrix(A, 0, i);
+            element += (A->matrix[0][i] * matrix_minor(&B) * sign);
+            sign *= -1;
+            s21_remove_matrix(&B);
+        }
+    }
+    element = (fabs(element) > EPS) ? element : 0.0;
+    return element;
+}
 
-// // определитель матрицы
-// int s21_determinant(matrix_t *A, double *result);
+// определитель матрицы
+int s21_determinant(matrix_t *A, double *result) {
+    int det = OK;
+    if (A->rows > 0 && A->columns > 0) {
+        if (A->rows == A->columns) {
+            *result = matrix_minor(A);
+        } else {
+            det = CALCULATION_ERROR;
+            *result = NAN;
+        }
+    } else {
+        det = INCORRECT_MATRIX;
+        *result = NAN;
+    }
+    return det;
+}
 
-// // обратная матрица
-// int s21_inverse_matrix(matrix_t *A, matrix_t *result);
+// обратная матрица
+int s21_inverse_matrix(matrix_t *A, matrix_t *result) {
+    int inv = OK;
+    if (A->rows > 0 && A->columns > 0) {
+        double det = 0.0;
+        int src = s21_determinant(A, &det);
+        if (!src && det) {
+            matrix_t min, trans;
+            s21_calc_complements(A, &min);
+            s21_transpose(&min, &trans);
+            s21_mult_number(&trans, 1 / det, result);
+            s21_remove_matrix(&min);
+            s21_remove_matrix(&trans);
+        } else {
+            inv = CALCULATION_ERROR;
+        }
+    } else {
+        inv = INCORRECT_MATRIX;
+    }
+    return inv;
+}
 
-// void copy_matrix_tst1(double src[3][3], matrix_t *dst) {
-//     for (int row = 0; row < dst->rows; row++) {
-//         for (int col = 0; col < dst->columns; col++) {
-//             dst->matrix[row][col] = src[row][col];
-//         }
-//     }
-// }
-
-// void copy_matrix_tst2(double src[2][2], matrix_t *dst) {
-//     for (int row = 0; row < dst->rows; row++) {
-//         for (int col = 0; col < dst->columns; col++) {
-//             dst->matrix[row][col] = src[row][col];
-//         }
-//     }
-// }
-
-// int main() {
-//     matrix_t result;
-//     double a[3][3] = {{1.0, 2.0, 3.0}, {4.0, 5.0, 6.0}, {7.0, 8.0, 9.0}};
-//     matrix_t x;
-//     s21_create_matrix(3, 3, &x);
-//     copy_matrix_tst1(a, &x);
-//     // for (int i = 0; i < 3; i++) {
-//     //     for (int j = 0; j < 3; j++) {
-//     //         printf("%.1f\n", x.matrix[i][j]);
-//     //     }
-//     // }
-//     double b[2][2] = {{1.0, 2.0}, {4.0, 5.0}};
-//      matrix_t y;
-//     s21_create_matrix(2, 2, &y);
-//     copy_matrix_tst2(b, &y);
-//     // for (int i = 0; i < 2; i++) {
-//     //     for (int j = 0; j < 2; j++) {
-//     //         printf("%.1f\n", y.matrix[i][j]);
-//     //     }
-//     // }
-//     int p = s21_sum_matrix(&x, &y, &result);
-//     // for (int i = 0; i < 3; i++) {
-//     //     for (int j = 0; j < 3; j++) {
-//     //         printf("%.1f\n", result.matrix[i][j]);
-//     //     }
-//     // }
-//     printf("%d", p);
-//     return 0;
-// }
+// int main() { return 0; }
